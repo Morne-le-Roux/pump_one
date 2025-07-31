@@ -45,7 +45,10 @@ class _HomeScreenState extends State<HomeScreen> {
             itemCount: refills.length,
             itemBuilder: (context, index) => Padding(
               padding: EdgeInsets.only(bottom: 10),
-              child: RefillCard(refill: refills[index]),
+              child: RefillCard(
+                refill: refills[index],
+                previousRefill: index > 0 ? refills[index - 1] : null,
+              ),
             ),
           ),
         ),

@@ -20,6 +20,7 @@ class _AddRefillState extends State<AddRefill> {
   final TextEditingController amountController = TextEditingController();
   final TextEditingController fillPercentageController =
       TextEditingController();
+  final TextEditingController odometerController = TextEditingController();
 
   void init() {}
 
@@ -28,6 +29,7 @@ class _AddRefillState extends State<AddRefill> {
     costController.dispose();
     amountController.dispose();
     fillPercentageController.dispose();
+    odometerController.dispose();
     super.dispose();
   }
 
@@ -91,12 +93,29 @@ class _AddRefillState extends State<AddRefill> {
                   return null;
                 },
               ),
+              TextFormField(
+                decoration: InputDecoration(
+                  hint: Text("Odometer Reading (km)"),
+                ),
+                keyboardType: TextInputType.numberWithOptions(),
+                autovalidateMode: AutovalidateMode.onUnfocus,
+                controller: odometerController,
+                validator: (value) {
+                  if (int.tryParse(value ?? "") == null) {
+                    isValid = false;
+                    return "Invalid";
+                  }
+                  isValid = true;
+                  return null;
+                },
+              ),
               Expanded(child: SizedBox()),
               InkWell(
                 onTap: () {
                   if (isValid) {
                     refill = Refill(
                       id: Uuid().v4(),
+                      odometer: int.tryParse(odometerController.text) ?? 0,
                       date: DateTime.now(),
                       cost: double.tryParse(costController.text) ?? 0,
                       amount: double.tryParse(amountController.text) ?? 0,
