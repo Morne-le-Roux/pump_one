@@ -31,33 +31,44 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      floatingActionButton: Container(
-        decoration: BoxDecoration(
-          border: Border.all(width: 1, color: Colors.grey),
-          borderRadius: BorderRadius.circular(8),
+      backgroundColor: const Color(0xFFF7F7F7),
+      appBar: AppBar(
+        title: const Text(
+          'Refills',
+          style: TextStyle(
+            color: Colors.black,
+            fontWeight: FontWeight.w600,
+            fontSize: 22,
+            letterSpacing: -0.5,
+          ),
         ),
-        child: FloatingActionButton(
-          elevation: 0,
-          backgroundColor: Colors.transparent,
-
-          onPressed: () {
-            Nav.push(
-              context,
-              AddRefill(
-                onAdd: (refill) async {
-                  await RefillDatabase.instance.insertRefill(refill);
-                  setState(() => refills.add(refill));
-                },
-              ),
-            );
-          },
-          child: const Icon(Icons.add),
-        ),
+        backgroundColor: Colors.white,
+        elevation: 0.5,
+        centerTitle: true,
+        iconTheme: const IconThemeData(color: Colors.black),
+      ),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: Colors.black,
+        elevation: 2,
+        onPressed: () {
+          Nav.push(
+            context,
+            AddRefill(
+              onAdd: (refill) async {
+                await RefillDatabase.instance.insertRefill(refill);
+                setState(() => refills.add(refill));
+              },
+            ),
+          );
+        },
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: const Icon(Icons.add, color: Colors.white),
       ),
       body: SafeArea(
         child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
           child: ListView.builder(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             itemCount: refills.length,
             itemBuilder: (context, index) {
               final refill = refills[index];
@@ -66,26 +77,30 @@ class _HomeScreenState extends State<HomeScreen> {
                 direction: DismissDirection.endToStart,
                 background: Container(
                   alignment: Alignment.centerRight,
-                  padding: EdgeInsets.symmetric(horizontal: 20),
-                  color: Colors.red,
-                  child: Icon(Icons.delete, color: Colors.white),
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  color: Colors.transparent,
+                  child: const Icon(
+                    Icons.delete_outline,
+                    color: Colors.black38,
+                    size: 28,
+                  ),
                 ),
                 confirmDismiss: (direction) async {
                   final confirm = await showDialog<bool>(
                     context: context,
                     builder: (context) => AlertDialog(
-                      title: Text('Delete Refill'),
-                      content: Text(
+                      title: const Text('Delete Refill'),
+                      content: const Text(
                         'Are you sure you want to delete this refill?',
                       ),
                       actions: [
                         TextButton(
                           onPressed: () => Navigator.of(context).pop(false),
-                          child: Text('Cancel'),
+                          child: const Text('Cancel'),
                         ),
                         TextButton(
                           onPressed: () => Navigator.of(context).pop(true),
-                          child: Text(
+                          child: const Text(
                             'Delete',
                             style: TextStyle(color: Colors.red),
                           ),
@@ -98,15 +113,15 @@ class _HomeScreenState extends State<HomeScreen> {
                     setState(() {
                       refills.removeAt(index);
                     });
-                    ScaffoldMessenger.of(
-                      context,
-                    ).showSnackBar(SnackBar(content: Text('Refill deleted')));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Refill deleted')),
+                    );
                     return true;
                   }
                   return false;
                 },
                 child: Padding(
-                  padding: EdgeInsets.only(bottom: 10),
+                  padding: const EdgeInsets.only(bottom: 14),
                   child: SizedBox(
                     width: double.infinity,
                     child: RefillCard(

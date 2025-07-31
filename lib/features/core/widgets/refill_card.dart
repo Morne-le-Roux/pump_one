@@ -10,27 +10,80 @@ class RefillCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(vertical: 10, horizontal: 15),
+      padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 18),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(width: 0.5, color: Colors.grey),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+        border: Border.all(width: 0.15, color: Colors.grey.shade300),
       ),
-
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text("Cost: ${refill.cost}"),
-          Text('Amount: ${refill.amount}'),
-          Text("Tank Percentage: ${refill.fillPercentage}"),
-          Text("Date: ${refill.date.toLocal()}"),
-          Text("Odometer: ${refill.odometer}"),
-          Text(
-            "L/100km: ${previousRefill != null ? getLiterPerKilometer(refill, previousRefill).toStringAsFixed(2) : 'N/A'}",
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                "R${refill.cost.toStringAsFixed(2)}",
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                ),
+              ),
+              Text(
+                "${refill.amount.toStringAsFixed(2)} L",
+                style: const TextStyle(color: Colors.black54, fontSize: 15),
+              ),
+            ],
           ),
-          Text(
-            "km/L: ${previousRefill != null ? getKilometerPerLiter(refill, previousRefill).toStringAsFixed(2) : 'N/A'}",
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                "${refill.fillPercentage.toStringAsFixed(0)}% full",
+                style: const TextStyle(color: Colors.black54, fontSize: 14),
+              ),
+              Text(
+                "${refill.odometer} km",
+                style: const TextStyle(color: Colors.black54, fontSize: 14),
+              ),
+            ],
           ),
-          Text("Price per L: ${getPricePerLiter(refill)}"),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                "${refill.date.day.toString().padLeft(2, '0')}/${refill.date.month.toString().padLeft(2, '0')}/${refill.date.year}",
+                style: const TextStyle(color: Colors.black38, fontSize: 13),
+              ),
+              Text(
+                "R${getPricePerLiter(refill).toStringAsFixed(2)}/L",
+                style: const TextStyle(color: Colors.black38, fontSize: 13),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                "L/100km: ${previousRefill != null ? getLiterPerKilometer(refill, previousRefill).toStringAsFixed(2) : 'N/A'}",
+                style: const TextStyle(color: Colors.black87, fontSize: 13),
+              ),
+              Text(
+                "km/L: ${previousRefill != null ? getKilometerPerLiter(refill, previousRefill).toStringAsFixed(2) : 'N/A'}",
+                style: const TextStyle(color: Colors.black87, fontSize: 13),
+              ),
+            ],
+          ),
         ],
       ),
     );

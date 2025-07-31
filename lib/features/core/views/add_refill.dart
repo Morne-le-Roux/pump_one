@@ -42,18 +42,47 @@ class _AddRefillState extends State<AddRefill> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Add a Refill")),
+      backgroundColor: const Color(0xFFF7F7F7),
+      appBar: AppBar(
+        title: const Text(
+          "Add a Refill",
+          style: TextStyle(
+            color: Colors.black,
+            fontWeight: FontWeight.w600,
+            fontSize: 20,
+          ),
+        ),
+        backgroundColor: Colors.white,
+        elevation: 0.5,
+        centerTitle: true,
+        iconTheme: const IconThemeData(color: Colors.black),
+      ),
       body: SafeArea(
         child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              const SizedBox(height: 8),
               TextFormField(
-                decoration: InputDecoration(hint: Text("Cost")),
-                keyboardType: TextInputType.numberWithOptions(),
+                decoration: InputDecoration(
+                  labelText: "Cost (R)",
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    vertical: 18,
+                    horizontal: 16,
+                  ),
+                ),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
                 controller: costController,
-                autovalidateMode: AutovalidateMode.onUnfocus,
+                autovalidateMode: AutovalidateMode.onUserInteraction,
                 validator: (value) {
                   if (double.tryParse(value ?? "") == null) {
                     isValid = false;
@@ -63,10 +92,25 @@ class _AddRefillState extends State<AddRefill> {
                   return null;
                 },
               ),
+              const SizedBox(height: 14),
               TextFormField(
-                decoration: InputDecoration(hint: Text("Amount")),
-                keyboardType: TextInputType.numberWithOptions(),
-                autovalidateMode: AutovalidateMode.onUnfocus,
+                decoration: InputDecoration(
+                  labelText: "Amount (L)",
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    vertical: 18,
+                    horizontal: 16,
+                  ),
+                ),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                autovalidateMode: AutovalidateMode.onUserInteraction,
                 controller: amountController,
                 validator: (value) {
                   if (double.tryParse(value ?? "") == null) {
@@ -77,12 +121,25 @@ class _AddRefillState extends State<AddRefill> {
                   return null;
                 },
               ),
+              const SizedBox(height: 14),
               TextFormField(
                 decoration: InputDecoration(
-                  hint: Text("Tank Fill % (After refill)"),
+                  labelText: "Tank Fill % (After refill)",
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    vertical: 18,
+                    horizontal: 16,
+                  ),
                 ),
-                keyboardType: TextInputType.numberWithOptions(),
-                autovalidateMode: AutovalidateMode.onUnfocus,
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                autovalidateMode: AutovalidateMode.onUserInteraction,
                 controller: fillPercentageController,
                 validator: (value) {
                   if (double.tryParse(value ?? "") == null) {
@@ -93,12 +150,25 @@ class _AddRefillState extends State<AddRefill> {
                   return null;
                 },
               ),
+              const SizedBox(height: 14),
               TextFormField(
                 decoration: InputDecoration(
-                  hint: Text("Odometer Reading (km)"),
+                  labelText: "Odometer Reading (km)",
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    vertical: 18,
+                    horizontal: 16,
+                  ),
                 ),
-                keyboardType: TextInputType.numberWithOptions(),
-                autovalidateMode: AutovalidateMode.onUnfocus,
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: false,
+                ),
+                autovalidateMode: AutovalidateMode.onUserInteraction,
                 controller: odometerController,
                 validator: (value) {
                   if (int.tryParse(value ?? "") == null) {
@@ -109,8 +179,8 @@ class _AddRefillState extends State<AddRefill> {
                   return null;
                 },
               ),
-              Expanded(child: SizedBox()),
-              InkWell(
+              const Spacer(),
+              GestureDetector(
                 onTap: () {
                   if (isValid) {
                     refill = Refill(
@@ -127,17 +197,24 @@ class _AddRefillState extends State<AddRefill> {
                   }
                 },
                 child: Container(
-                  padding: EdgeInsets.symmetric(vertical: 10),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
                   alignment: Alignment.center,
-
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(width: 1, color: Colors.grey),
+                    color: Colors.black,
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Text("Add Refill"),
+                  child: const Text(
+                    "Add Refill",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                      letterSpacing: 0.2,
+                    ),
+                  ),
                 ),
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 18),
             ],
           ),
         ),
