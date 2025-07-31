@@ -1,6 +1,6 @@
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:pump_one/features/core/models/refill.dart';
+import 'package:refills/features/core/models/refill.dart';
 
 class RefillDatabase {
   static final RefillDatabase instance = RefillDatabase._init();

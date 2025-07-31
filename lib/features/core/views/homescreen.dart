@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:pump_one/features/core/models/refill.dart';
-import 'package:pump_one/features/core/data/refill_database.dart';
-import 'package:pump_one/features/core/views/add_refill.dart';
-import 'package:pump_one/features/core/widgets/refill_card.dart';
-import 'package:pump_one/nav.dart';
+import 'package:refills/features/core/models/refill.dart';
+import 'package:refills/features/core/data/refill_database.dart';
+import 'package:refills/features/core/views/add_refill.dart';
+import 'package:refills/features/core/widgets/refill_card.dart';
+import 'package:refills/nav.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});

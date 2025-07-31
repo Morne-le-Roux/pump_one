@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:pump_one/features/core/models/refill.dart';
+import 'package:refills/features/core/models/refill.dart';
 
 class RefillCard extends StatelessWidget {
   const RefillCard({super.key, required this.refill, this.previousRefill});

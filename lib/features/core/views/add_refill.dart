@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:pump_one/features/core/models/refill.dart';
-import 'package:pump_one/nav.dart';
+import 'package:refills/features/core/models/refill.dart';
+import 'package:refills/nav.dart';
 import 'package:uuid/uuid.dart';
 
 class AddRefill extends StatefulWidget {
