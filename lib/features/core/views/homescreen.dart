@@ -31,8 +31,8 @@ class _HomeScreenState extends State<HomeScreen> {
       offset: _currentOffset,
     );
     setState(() {
-      refills = List<Refill>.from(page)
-        ..sort((a, b) => a.odometer.compareTo(b.odometer));
+      refills = List<Refill>.from(page);
+      // ..sort((a, b) => a.odometer.compareTo(b.odometer));
       _currentOffset = page.length;
       _hasMore = page.length == _pageSize;
     });
@@ -49,7 +49,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
     setState(() {
       refills.addAll(page);
-      refills.sort((a, b) => a.odometer.compareTo(b.odometer));
+      // refills.sort((a, b) => a.odometer.compareTo(b.odometer));
       _currentOffset += page.length;
       _hasMore = page.length == _pageSize;
       _isLoadingMore = false;
@@ -71,13 +71,13 @@ class _HomeScreenState extends State<HomeScreen> {
 
   List<FlSpot> getChartSpots() {
     final latestRefills = refills.length > 30
-        ? refills.sublist(refills.length - 30)
+        ? refills.sublist(0, 30)
         : refills;
     List<FlSpot> spots = [];
-    for (int i = 1; i < latestRefills.length; i++) {
-      final prev = latestRefills[i - 1];
+    for (int i = 0; i < latestRefills.length - 1; i++) {
       final curr = latestRefills[i];
-      final distance = curr.odometer - prev.odometer;
+      final next = latestRefills[i + 1];
+      final distance = curr.odometer - next.odometer;
       final liters = curr.amount;
       double kmPerLiter = (liters > 0) ? distance / liters : 0;
       double value = 0;
@@ -89,23 +89,6 @@ class _HomeScreenState extends State<HomeScreen> {
       spots.add(FlSpot(i.toDouble(), value));
     }
     return spots;
-  }
-
-  List<double> getYAxisTicks(List<FlSpot> spots) {
-    if (spots.isEmpty) return [];
-    double min = spots.map((e) => e.y).reduce((a, b) => a < b ? a : b);
-    double max = spots.map((e) => e.y).reduce((a, b) => a > b ? a : b);
-
-    // Always pad if min == max
-    if ((max - min).abs() < 0.01) {
-      min -= 1;
-      max += 2;
-    }
-
-    double mid = (min + max) / 2;
-
-    // Ensure all values are unique and sorted
-    return {min, mid, max}.toList()..sort();
   }
 
   @override
@@ -155,7 +138,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 await RefillDatabase.instance.insertRefill(refill);
                 setState(() {
                   refills.add(refill);
-                  refills.sort((a, b) => a.odometer.compareTo(b.odometer));
+                  refills.sort(
+                    (a, b) => b.odometer.compareTo(a.odometer),
+                  ); // Newest to oldest
                 });
               },
             ),
@@ -210,7 +195,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               child: Builder(
                                 builder: (context) {
                                   final spots = getChartSpots();
-                                  final ticks = getYAxisTicks(spots);
+                                  // final ticks = getYAxisTicks(spots);
                                   return BarChart(
                                     BarChartData(
                                       gridData: FlGridData(
@@ -222,28 +207,28 @@ class _HomeScreenState extends State<HomeScreen> {
                                           sideTitles: SideTitles(
                                             showTitles: true,
                                             reservedSize: 38,
-                                            getTitlesWidget: (value, meta) {
-                                              if (ticks.contains(value)) {
-                                                return Padding(
-                                                  padding:
-                                                      const EdgeInsets.only(
-                                                        right: 8,
-                                                      ),
-                                                  child: Text(
-                                                    value.toStringAsFixed(1),
-                                                    style: const TextStyle(
-                                                      color: Colors.black54,
-                                                      fontSize: 11,
-                                                    ),
-                                                    textAlign: TextAlign.right,
-                                                  ),
-                                                );
-                                              }
-                                              return const SizedBox.shrink();
-                                            },
-                                            interval: ticks.length > 1
-                                                ? (ticks[1])
-                                                : 1,
+                                            // getTitlesWidget: (value, meta) {
+                                            //   if (ticks.contains(value)) {
+                                            //     return Padding(
+                                            //       padding:
+                                            //           const EdgeInsets.only(
+                                            //             right: 8,
+                                            //           ),
+                                            //       child: Text(
+                                            //         value.toStringAsFixed(1),
+                                            //         style: const TextStyle(
+                                            //           color: Colors.black54,
+                                            //           fontSize: 11,
+                                            //         ),
+                                            //         textAlign: TextAlign.right,
+                                            //       ),
+                                            //     );
+                                            //   }
+                                            //   return const SizedBox.shrink();
+                                            // },
+                                            // interval: ticks.length > 1
+                                            //     ? (ticks[1])
+                                            //     : 1,
                                           ),
                                         ),
                                         bottomTitles: AxisTitles(
@@ -412,8 +397,14 @@ class _HomeScreenState extends State<HomeScreen> {
                 );
               }
               if (index > 0 && index <= refills.length) {
+                // Always use sorted refills for calculations
+                refills.sort(
+                  (a, b) => b.odometer.compareTo(a.odometer),
+                ); // Newest to oldest
                 final refill = refills[index - 1];
-                // ...existing code...
+                final nextRefill = (index < refills.length)
+                    ? refills[index]
+                    : null;
                 return Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 16,
@@ -458,11 +449,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       if (confirm == true) {
                         await RefillDatabase.instance.deleteRefill(refill.id);
                         setState(() {
-                          refills.removeAt(index - 1);
-                          // Resort after deletion to keep order
+                          refills.remove(refill);
                           refills.sort(
-                            (a, b) => a.odometer.compareTo(b.odometer),
-                          );
+                            (a, b) => b.odometer.compareTo(a.odometer),
+                          ); // Newest to oldest
                         });
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text('Refill deleted')),
@@ -477,7 +467,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         width: double.infinity,
                         child: RefillCard(
                           refill: refill,
-                          previousRefill: index > 1 ? refills[index - 2] : null,
+                          previousRefill:
+                              nextRefill, // Use next refill instead of previous
                         ),
                       ),
                     ),
@@ -512,17 +503,20 @@ class _HomeScreenState extends State<HomeScreen> {
 
     final now = DateTime.now();
     final random = DateTime.now().microsecond;
-    List<Refill> debugRefills = List.generate(200, (i) {
-      // Use more randomization for odometer, amount, cost, fillPercentage
+    // Keep debug data so that L/100km and km/L values stay below 30
+    List<Refill> debugRefills = List.generate(20, (i) {
       final randOffset = (i * random) % 1000;
+      // Keep odometer increments and amount reasonable for values below 30
+      final odometerIncrement =
+          120 + (randOffset % 30); // 120-150 km between refills
+      final amount = 6.0 + (randOffset % 4); // 6-9 liters per refill
       return Refill(
         id: 'debug_${i}_$randOffset',
-        odometer:
-            10000 + i * (400 + randOffset % 200) + (i * 10) + (randOffset % 50),
-        amount: 35 + (randOffset % 10) + (i % 7),
+        odometer: 10000 + i * odometerIncrement,
+        amount: amount,
         cost: 18.0 + (randOffset % 7) + (i % 5),
         fillPercentage: 0.3 + ((randOffset % 7) * 0.09) + ((i % 5) * 0.05),
-        date: now.subtract(Duration(days: 200 - i + (randOffset % 5))),
+        date: now.subtract(Duration(days: 30 - i + (randOffset % 5))),
       );
     });
     for (final refill in debugRefills) {
