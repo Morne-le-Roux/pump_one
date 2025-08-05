@@ -4,7 +4,7 @@ Track your fuel usage effortlessly — no sign-ups, no cloud sync, just simple a
 
 **Refills** is a lightweight fuel tracking app built with **Flutter**, designed to store all your data **locally** using **SharedPreferences** and **SQLite**. Whether you're monitoring costs, fuel efficiency, or just want to nerd out over your car stats, Refills has your back.
 
-> ⚠️ This is a **vibe-coded**, **100% AI-generated** app — born from a string of spontaneous prompts, coffee-fueled dev sessions, and a "ship it now, fix it later" mentality.  
+> ⚠️ This is a **vibe-coded**, **100% AI-generated** app — born from a string of spontaneous prompts, coffee-fueled dev sessions, and a "ship it now, fix it later" mentality. Even this readme is AI generated. Could you tell?  
 > The code may be messy, but the vibes? Immaculate. PRs welcome 😎
 
 ---
