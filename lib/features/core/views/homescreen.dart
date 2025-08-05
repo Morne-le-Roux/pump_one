@@ -211,11 +211,10 @@ class _HomeScreenState extends State<HomeScreen> {
                                 builder: (context) {
                                   final spots = getChartSpots();
                                   final ticks = getYAxisTicks(spots);
-                                  return LineChart(
-                                    LineChartData(
+                                  return BarChart(
+                                    BarChartData(
                                       gridData: FlGridData(
                                         show: true,
-
                                         drawHorizontalLine: true,
                                       ),
                                       titlesData: FlTitlesData(
@@ -224,7 +223,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                             showTitles: true,
                                             reservedSize: 38,
                                             getTitlesWidget: (value, meta) {
-                                              // Ensure all ticks are displayed
                                               if (ticks.contains(value)) {
                                                 return Padding(
                                                   padding:
@@ -265,26 +263,50 @@ class _HomeScreenState extends State<HomeScreen> {
                                         ),
                                       ),
                                       borderData: FlBorderData(show: false),
-                                      lineBarsData: [
-                                        LineChartBarData(
-                                          spots: spots,
-                                          isCurved: true,
-                                          color: Colors.black,
-                                          barWidth: 2,
-                                          dotData: FlDotData(show: false),
-                                          belowBarData: BarAreaData(
-                                            show: true,
-                                            gradient: LinearGradient(
-                                              colors: [
-                                                Colors.black.withOpacity(0.08),
-                                                Colors.transparent,
-                                              ],
-                                              begin: Alignment.topCenter,
-                                              end: Alignment.bottomCenter,
+                                      barGroups: spots.map((spot) {
+                                        return BarChartGroupData(
+                                          x: spot.x.toInt(),
+                                          barRods: [
+                                            BarChartRodData(
+                                              toY: spot.y,
+                                              color: Colors.black,
+                                              width: 8,
+                                              borderRadius:
+                                                  BorderRadius.circular(4),
+                                              backDrawRodData:
+                                                  BackgroundBarChartRodData(
+                                                    show: true,
+                                                    toY: 0,
+                                                    color: Colors.black
+                                                        .withOpacity(0.08),
+                                                  ),
                                             ),
-                                          ),
+                                          ],
+                                        );
+                                      }).toList(),
+                                      barTouchData: BarTouchData(
+                                        touchTooltipData: BarTouchTooltipData(
+                                          tooltipBgColor: Colors.black54,
+                                          tooltipMargin: 8,
+                                          fitInsideHorizontally: true,
+                                          fitInsideVertically: true,
+                                          getTooltipItem:
+                                              (
+                                                group,
+                                                groupIndex,
+                                                rod,
+                                                rodIndex,
+                                              ) {
+                                                return BarTooltipItem(
+                                                  rod.toY.toStringAsFixed(1),
+                                                  const TextStyle(
+                                                    color: Colors.white,
+                                                    fontSize: 12,
+                                                  ),
+                                                );
+                                              },
                                         ),
-                                      ],
+                                      ),
                                     ),
                                   );
                                 },
