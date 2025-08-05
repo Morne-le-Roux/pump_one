@@ -92,7 +92,10 @@ class RefillCard extends StatelessWidget {
 
 double getLiterPerKilometer(Refill current, Refill? previous) {
   if (previous == null) return 0.0;
-  return ((current.odometer - previous.odometer) / current.amount) * 100;
+  double kmPerLiter = (current.amount > 0)
+      ? (current.odometer - previous.odometer) / current.amount
+      : 0;
+  return (kmPerLiter > 0) ? 100 / kmPerLiter : 0;
 }
 
 double getKilometerPerLiter(Refill current, Refill? previous) {

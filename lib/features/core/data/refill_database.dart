@@ -3,6 +3,31 @@ import 'package:sqflite/sqflite.dart';
 import 'package:refills/features/core/models/refill.dart';
 
 class RefillDatabase {
+  Future<List<Refill>> getRefillsPage({
+    required int limit,
+    required int offset,
+  }) async {
+    final db = await instance.database;
+    final maps = await db.query(
+      'refills',
+      orderBy: 'odometer DESC',
+      limit: limit,
+      offset: offset,
+    );
+    return maps
+        .map(
+          (map) => Refill(
+            id: map['id'] as String,
+            amount: map['amount'] as double,
+            cost: map['cost'] as double,
+            date: DateTime.parse(map['date'] as String),
+            fillPercentage: map['fillPercentage'] as double,
+            odometer: map['odometer'] as int,
+          ),
+        )
+        .toList();
+  }
+
   static final RefillDatabase instance = RefillDatabase._init();
   static Database? _database;
 

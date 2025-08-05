@@ -4,6 +4,8 @@ import 'package:refills/features/core/data/refill_database.dart';
 import 'package:refills/features/core/views/add_refill.dart';
 import 'package:refills/features/core/widgets/refill_card.dart';
 import 'package:refills/nav.dart';
+import 'package:fl_chart/fl_chart.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -14,17 +16,112 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   List<Refill> refills = [];
+  bool showKmPerLiter = true;
+  final int _pageSize = 30;
+  int _currentOffset = 0;
+  bool _isLoadingMore = false;
+  bool _hasMore = true;
+  final ScrollController _scrollController = ScrollController();
+
+  Future<void> _loadInitialRefills() async {
+    _currentOffset = 0;
+    _hasMore = true;
+    final page = await RefillDatabase.instance.getRefillsPage(
+      limit: _pageSize,
+      offset: _currentOffset,
+    );
+    setState(() {
+      refills = List<Refill>.from(page)
+        ..sort((a, b) => a.odometer.compareTo(b.odometer));
+      _currentOffset = page.length;
+      _hasMore = page.length == _pageSize;
+    });
+  }
+
+  Future<void> _loadMoreRefills() async {
+    if (_isLoadingMore || !_hasMore) return;
+    setState(() {
+      _isLoadingMore = true;
+    });
+    final page = await RefillDatabase.instance.getRefillsPage(
+      limit: _pageSize,
+      offset: _currentOffset,
+    );
+    setState(() {
+      refills.addAll(page);
+      refills.sort((a, b) => a.odometer.compareTo(b.odometer));
+      _currentOffset += page.length;
+      _hasMore = page.length == _pageSize;
+      _isLoadingMore = false;
+    });
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
+      _loadMoreRefills();
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  List<FlSpot> getChartSpots() {
+    final latestRefills = refills.length > 30
+        ? refills.sublist(refills.length - 30)
+        : refills;
+    List<FlSpot> spots = [];
+    for (int i = 1; i < latestRefills.length; i++) {
+      final prev = latestRefills[i - 1];
+      final curr = latestRefills[i];
+      final distance = curr.odometer - prev.odometer;
+      final liters = curr.amount;
+      double kmPerLiter = (liters > 0) ? distance / liters : 0;
+      double value = 0;
+      if (showKmPerLiter) {
+        value = kmPerLiter;
+      } else {
+        value = (kmPerLiter > 0) ? 100 / kmPerLiter : 0;
+      }
+      spots.add(FlSpot(i.toDouble(), value));
+    }
+    return spots;
+  }
+
+  List<double> getYAxisTicks(List<FlSpot> spots) {
+    if (spots.isEmpty) return [];
+    double min = spots.map((e) => e.y).reduce((a, b) => a < b ? a : b);
+    double max = spots.map((e) => e.y).reduce((a, b) => a > b ? a : b);
+
+    // Always pad if min == max
+    if ((max - min).abs() < 0.01) {
+      min -= 1;
+      max += 2;
+    }
+
+    double mid = (min + max) / 2;
+
+    // Ensure all values are unique and sorted
+    return {min, mid, max}.toList()..sort();
+  }
 
   @override
   void initState() {
     super.initState();
-    _loadRefills();
+    _loadSwitchSetting();
+    _seedDebugData();
+
+    _loadInitialRefills();
+    _scrollController.addListener(_onScroll);
   }
 
-  Future<void> _loadRefills() async {
-    final loadedRefills = await RefillDatabase.instance.getAllRefills();
+  Future<void> _loadSwitchSetting() async {
+    final prefs = await SharedPreferences.getInstance();
     setState(() {
-      refills = loadedRefills;
+      showKmPerLiter = prefs.getBool('showKmPerLiter') ?? true;
     });
   }
 
@@ -56,7 +153,10 @@ class _HomeScreenState extends State<HomeScreen> {
             AddRefill(
               onAdd: (refill) async {
                 await RefillDatabase.instance.insertRefill(refill);
-                setState(() => refills.add(refill));
+                setState(() {
+                  refills.add(refill);
+                  refills.sort((a, b) => a.odometer.compareTo(b.odometer));
+                });
               },
             ),
           );
@@ -68,73 +168,344 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
           child: ListView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-            itemCount: refills.length,
+            controller: _scrollController,
+            padding: EdgeInsets.zero,
+            itemCount: refills.isNotEmpty
+                ? refills.length + 2
+                : 0, // +1 for graph, +1 for loading
             itemBuilder: (context, index) {
-              final refill = refills[index];
-              return Dismissible(
-                key: Key(refill.id),
-                direction: DismissDirection.endToStart,
-                background: Container(
-                  alignment: Alignment.centerRight,
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  color: Colors.transparent,
-                  child: const Icon(
-                    Icons.delete_outline,
-                    color: Colors.black38,
-                    size: 28,
+              if (index == 0) {
+                // Graph at the top with switch below, inside a card-like container
+                return Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 16,
                   ),
-                ),
-                confirmDismiss: (direction) async {
-                  final confirm = await showDialog<bool>(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                      title: const Text('Delete Refill'),
-                      content: const Text(
-                        'Are you sure you want to delete this refill?',
-                      ),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.of(context).pop(false),
-                          child: const Text('Cancel'),
+                  child: Column(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 18,
+                          horizontal: 18,
                         ),
-                        TextButton(
-                          onPressed: () => Navigator.of(context).pop(true),
-                          child: const Text(
-                            'Delete',
-                            style: TextStyle(color: Colors.red),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(14),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.04),
+                              blurRadius: 12,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                          border: Border.all(
+                            width: 0.15,
+                            color: Colors.grey.shade300,
                           ),
                         ),
-                      ],
+                        child: Column(
+                          children: [
+                            SizedBox(
+                              height: 220,
+                              child: Builder(
+                                builder: (context) {
+                                  final spots = getChartSpots();
+                                  final ticks = getYAxisTicks(spots);
+                                  return LineChart(
+                                    LineChartData(
+                                      gridData: FlGridData(
+                                        show: true,
+
+                                        drawHorizontalLine: true,
+                                      ),
+                                      titlesData: FlTitlesData(
+                                        leftTitles: AxisTitles(
+                                          sideTitles: SideTitles(
+                                            showTitles: true,
+                                            reservedSize: 38,
+                                            getTitlesWidget: (value, meta) {
+                                              // Ensure all ticks are displayed
+                                              if (ticks.contains(value)) {
+                                                return Padding(
+                                                  padding:
+                                                      const EdgeInsets.only(
+                                                        right: 8,
+                                                      ),
+                                                  child: Text(
+                                                    value.toStringAsFixed(1),
+                                                    style: const TextStyle(
+                                                      color: Colors.black54,
+                                                      fontSize: 11,
+                                                    ),
+                                                    textAlign: TextAlign.right,
+                                                  ),
+                                                );
+                                              }
+                                              return const SizedBox.shrink();
+                                            },
+                                            interval: ticks.length > 1
+                                                ? (ticks[1])
+                                                : 1,
+                                          ),
+                                        ),
+                                        bottomTitles: AxisTitles(
+                                          sideTitles: SideTitles(
+                                            showTitles: false,
+                                          ),
+                                        ),
+                                        topTitles: AxisTitles(
+                                          sideTitles: SideTitles(
+                                            showTitles: false,
+                                          ),
+                                        ),
+                                        rightTitles: AxisTitles(
+                                          sideTitles: SideTitles(
+                                            showTitles: false,
+                                          ),
+                                        ),
+                                      ),
+                                      borderData: FlBorderData(show: false),
+                                      lineBarsData: [
+                                        LineChartBarData(
+                                          spots: spots,
+                                          isCurved: true,
+                                          color: Colors.black,
+                                          barWidth: 2,
+                                          dotData: FlDotData(show: false),
+                                          belowBarData: BarAreaData(
+                                            show: true,
+                                            gradient: LinearGradient(
+                                              colors: [
+                                                Colors.black.withOpacity(0.08),
+                                                Colors.transparent,
+                                              ],
+                                              begin: Alignment.topCenter,
+                                              end: Alignment.bottomCenter,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                            const SizedBox(height: 32),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'L/100km',
+                                  style: TextStyle(
+                                    color: !showKmPerLiter
+                                        ? Colors.black
+                                        : Colors.black38,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                  ),
+                                  child: GestureDetector(
+                                    onTap: () async {
+                                      setState(() {
+                                        showKmPerLiter = !showKmPerLiter;
+                                      });
+                                      final prefs =
+                                          await SharedPreferences.getInstance();
+                                      await prefs.setBool(
+                                        'showKmPerLiter',
+                                        showKmPerLiter,
+                                      );
+                                    },
+                                    child: AnimatedContainer(
+                                      duration: const Duration(
+                                        milliseconds: 260,
+                                      ),
+                                      curve: Curves.bounceOut,
+                                      width: 38,
+                                      height: 22,
+                                      decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(
+                                          color: Colors.black12,
+                                          width: 1,
+                                        ),
+                                      ),
+                                      child: Stack(
+                                        children: [
+                                          AnimatedPositioned(
+                                            duration: const Duration(
+                                              milliseconds: 260,
+                                            ),
+                                            curve: Curves.bounceOut,
+                                            left: showKmPerLiter ? 18 : 2,
+                                            top: 2,
+                                            child: Padding(
+                                              padding: const EdgeInsets.only(
+                                                bottom: 2,
+                                              ),
+                                              child: Container(
+                                                width: 16,
+                                                height: 16,
+                                                decoration: BoxDecoration(
+                                                  color: Colors.black,
+                                                  borderRadius:
+                                                      BorderRadius.circular(9),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                Text(
+                                  'km/L',
+                                  style: TextStyle(
+                                    color: showKmPerLiter
+                                        ? Colors.black
+                                        : Colors.black38,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      // ...existing code...
+                    ],
+                  ),
+                );
+              }
+              if (index == refills.length + 1 && _hasMore) {
+                // Loading indicator at the end
+                return const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 24),
+                  child: Center(child: CircularProgressIndicator()),
+                );
+              }
+              if (index > 0 && index <= refills.length) {
+                final refill = refills[index - 1];
+                // ...existing code...
+                return Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 0,
+                  ),
+                  child: Dismissible(
+                    key: Key(refill.id),
+                    direction: DismissDirection.endToStart,
+                    background: Container(
+                      alignment: Alignment.centerRight,
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      color: Colors.transparent,
+                      child: const Icon(
+                        Icons.delete_outline,
+                        color: Colors.black38,
+                        size: 28,
+                      ),
                     ),
-                  );
-                  if (confirm == true) {
-                    await RefillDatabase.instance.deleteRefill(refill.id);
-                    setState(() {
-                      refills.removeAt(index);
-                    });
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Refill deleted')),
-                    );
-                    return true;
-                  }
-                  return false;
-                },
-                child: Padding(
-                  padding: const EdgeInsets.only(bottom: 14),
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: RefillCard(
-                      refill: refill,
-                      previousRefill: index > 0 ? refills[index - 1] : null,
+                    confirmDismiss: (direction) async {
+                      final confirm = await showDialog<bool>(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: const Text('Delete Refill'),
+                          content: const Text(
+                            'Are you sure you want to delete this refill?',
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.of(context).pop(false),
+                              child: const Text('Cancel'),
+                            ),
+                            TextButton(
+                              onPressed: () => Navigator.of(context).pop(true),
+                              child: const Text(
+                                'Delete',
+                                style: TextStyle(color: Colors.red),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                      if (confirm == true) {
+                        await RefillDatabase.instance.deleteRefill(refill.id);
+                        setState(() {
+                          refills.removeAt(index - 1);
+                          // Resort after deletion to keep order
+                          refills.sort(
+                            (a, b) => a.odometer.compareTo(b.odometer),
+                          );
+                        });
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Refill deleted')),
+                        );
+                        return true;
+                      }
+                      return false;
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: 14),
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: RefillCard(
+                          refill: refill,
+                          previousRefill: index > 1 ? refills[index - 2] : null,
+                        ),
+                      ),
                     ),
                   ),
-                ),
-              );
+                );
+              }
+              return const SizedBox.shrink();
             },
           ),
         ),
       ),
     );
+  }
+
+  Future<void> _seedDebugData() async {
+    // Only run in debug mode
+    bool isDebug = false;
+    assert(() {
+      isDebug = true;
+      return true;
+    }());
+    if (!isDebug) return;
+
+    // Delete all current data
+    final allRefills = await RefillDatabase.instance.getRefillsPage(
+      limit: 10000,
+      offset: 0,
+    );
+    for (final refill in allRefills) {
+      await RefillDatabase.instance.deleteRefill(refill.id);
+    }
+
+    final now = DateTime.now();
+    final random = DateTime.now().microsecond;
+    List<Refill> debugRefills = List.generate(200, (i) {
+      // Use more randomization for odometer, amount, cost, fillPercentage
+      final randOffset = (i * random) % 1000;
+      return Refill(
+        id: 'debug_${i}_$randOffset',
+        odometer:
+            10000 + i * (400 + randOffset % 200) + (i * 10) + (randOffset % 50),
+        amount: 35 + (randOffset % 10) + (i % 7),
+        cost: 18.0 + (randOffset % 7) + (i % 5),
+        fillPercentage: 0.3 + ((randOffset % 7) * 0.09) + ((i % 5) * 0.05),
+        date: now.subtract(Duration(days: 200 - i + (randOffset % 5))),
+      );
+    });
+    for (final refill in debugRefills) {
+      await RefillDatabase.instance.insertRefill(refill);
+    }
+    await _loadInitialRefills();
   }
 }
