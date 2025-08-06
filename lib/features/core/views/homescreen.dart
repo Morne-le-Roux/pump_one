@@ -74,7 +74,8 @@ class _HomeScreenState extends State<HomeScreen> {
         ? refills.sublist(0, 30)
         : refills;
     List<FlSpot> spots = [];
-    for (int i = 0; i < latestRefills.length - 1; i++) {
+    // Reverse the order so the latest is on the right
+    for (int i = latestRefills.length - 2; i >= 0; i--) {
       final curr = latestRefills[i];
       final next = latestRefills[i + 1];
       final distance = curr.odometer - next.odometer;
@@ -86,7 +87,7 @@ class _HomeScreenState extends State<HomeScreen> {
       } else {
         value = (kmPerLiter > 0) ? 100 / kmPerLiter : 0;
       }
-      spots.add(FlSpot(i.toDouble(), value));
+      spots.add(FlSpot((latestRefills.length - 2 - i).toDouble(), value));
     }
     return spots;
   }
