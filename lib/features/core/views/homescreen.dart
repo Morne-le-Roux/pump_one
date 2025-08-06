@@ -96,7 +96,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _loadSwitchSetting();
-    _seedDebugData();
+    // _seedDebugData();
 
     _loadInitialRefills();
     _scrollController.addListener(_onScroll);
@@ -150,318 +150,356 @@ class _HomeScreenState extends State<HomeScreen> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         child: const Icon(Icons.add, color: Colors.white),
       ),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
-          child: ListView.builder(
-            controller: _scrollController,
-            padding: EdgeInsets.zero,
-            itemCount: refills.isNotEmpty
-                ? refills.length + 2
-                : 0, // +1 for graph, +1 for loading
-            itemBuilder: (context, index) {
-              if (index == 0) {
-                // Only show graph if there are 2 or more refills
-                if (refills.length < 2) {
-                  return const SizedBox.shrink();
-                }
-                // Graph at the top with switch below, inside a card-like container
-                return Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 16,
-                  ),
-                  child: Column(
-                    children: [
-                      Container(
+      body: refills.isEmpty
+          ? SafeArea(
+              child: Padding(
+                padding: EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.local_gas_station, size: 40),
+                    SizedBox(height: 20),
+                    Text(
+                      "No readings yet!\nTap the + button in the bottom right to get started.",
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+            )
+          : SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
+                child: ListView.builder(
+                  controller: _scrollController,
+                  padding: EdgeInsets.zero,
+                  itemCount: refills.isNotEmpty
+                      ? refills.length + 2
+                      : 0, // +1 for graph, +1 for loading
+                  itemBuilder: (context, index) {
+                    if (index == 0) {
+                      // Only show graph if there are 2 or more refills
+                      if (refills.length < 2) {
+                        return const SizedBox.shrink();
+                      }
+                      // Graph at the top with switch below, inside a card-like container
+                      return Padding(
                         padding: const EdgeInsets.symmetric(
-                          vertical: 18,
-                          horizontal: 18,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(14),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.04),
-                              blurRadius: 12,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                          border: Border.all(
-                            width: 0.15,
-                            color: Colors.grey.shade300,
-                          ),
+                          horizontal: 16,
+                          vertical: 16,
                         ),
                         child: Column(
                           children: [
-                            SizedBox(
-                              height: 220,
-                              child: Builder(
-                                builder: (context) {
-                                  final spots = getChartSpots();
-                                  return BarChart(
-                                    BarChartData(
-                                      gridData: FlGridData(
-                                        show: true,
-                                        drawHorizontalLine: true,
-                                      ),
-                                      titlesData: FlTitlesData(
-                                        leftTitles: AxisTitles(
-                                          sideTitles: SideTitles(
-                                            showTitles: true,
-                                            reservedSize: 38,
-                                          ),
-                                        ),
-                                        bottomTitles: AxisTitles(
-                                          sideTitles: SideTitles(
-                                            showTitles: false,
-                                          ),
-                                        ),
-                                        topTitles: AxisTitles(
-                                          sideTitles: SideTitles(
-                                            showTitles: false,
-                                          ),
-                                        ),
-                                        rightTitles: AxisTitles(
-                                          sideTitles: SideTitles(
-                                            showTitles: false,
-                                          ),
-                                        ),
-                                      ),
-                                      borderData: FlBorderData(show: false),
-                                      barGroups: spots.map((spot) {
-                                        return BarChartGroupData(
-                                          x: spot.x.toInt(),
-                                          barRods: [
-                                            BarChartRodData(
-                                              toY: spot.y,
-                                              color: Colors.black,
-                                              width: 8,
-                                              borderRadius:
-                                                  BorderRadius.circular(4),
-                                              backDrawRodData:
-                                                  BackgroundBarChartRodData(
-                                                    show: true,
-                                                    toY: 0,
-                                                    color: Colors.black
-                                                        .withOpacity(0.08),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 18,
+                                horizontal: 18,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(14),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.04),
+                                    blurRadius: 12,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                                border: Border.all(
+                                  width: 0.15,
+                                  color: Colors.grey.shade300,
+                                ),
+                              ),
+                              child: Column(
+                                children: [
+                                  SizedBox(
+                                    height: 220,
+                                    child: Builder(
+                                      builder: (context) {
+                                        final spots = getChartSpots();
+                                        return BarChart(
+                                          BarChartData(
+                                            gridData: FlGridData(
+                                              show: true,
+                                              drawHorizontalLine: true,
+                                            ),
+                                            titlesData: FlTitlesData(
+                                              leftTitles: AxisTitles(
+                                                sideTitles: SideTitles(
+                                                  showTitles: true,
+                                                  reservedSize: 38,
+                                                ),
+                                              ),
+                                              bottomTitles: AxisTitles(
+                                                sideTitles: SideTitles(
+                                                  showTitles: false,
+                                                ),
+                                              ),
+                                              topTitles: AxisTitles(
+                                                sideTitles: SideTitles(
+                                                  showTitles: false,
+                                                ),
+                                              ),
+                                              rightTitles: AxisTitles(
+                                                sideTitles: SideTitles(
+                                                  showTitles: false,
+                                                ),
+                                              ),
+                                            ),
+                                            borderData: FlBorderData(
+                                              show: false,
+                                            ),
+                                            barGroups: spots.map((spot) {
+                                              return BarChartGroupData(
+                                                x: spot.x.toInt(),
+                                                barRods: [
+                                                  BarChartRodData(
+                                                    toY: spot.y,
+                                                    color: Colors.black,
+                                                    width: 8,
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          4,
+                                                        ),
+                                                    backDrawRodData:
+                                                        BackgroundBarChartRodData(
+                                                          show: true,
+                                                          toY: 0,
+                                                          color: Colors.black
+                                                              .withOpacity(
+                                                                0.08,
+                                                              ),
+                                                        ),
+                                                  ),
+                                                ],
+                                              );
+                                            }).toList(),
+                                            barTouchData: BarTouchData(
+                                              touchTooltipData:
+                                                  BarTouchTooltipData(
+                                                    tooltipBgColor:
+                                                        Colors.black54,
+                                                    tooltipMargin: 8,
+                                                    fitInsideHorizontally: true,
+                                                    fitInsideVertically: true,
+                                                    getTooltipItem:
+                                                        (
+                                                          group,
+                                                          groupIndex,
+                                                          rod,
+                                                          rodIndex,
+                                                        ) {
+                                                          return BarTooltipItem(
+                                                            rod.toY
+                                                                .toStringAsFixed(
+                                                                  1,
+                                                                ),
+                                                            const TextStyle(
+                                                              color:
+                                                                  Colors.white,
+                                                              fontSize: 12,
+                                                            ),
+                                                          );
+                                                        },
                                                   ),
                                             ),
-                                          ],
+                                          ),
                                         );
-                                      }).toList(),
-                                      barTouchData: BarTouchData(
-                                        touchTooltipData: BarTouchTooltipData(
-                                          tooltipBgColor: Colors.black54,
-                                          tooltipMargin: 8,
-                                          fitInsideHorizontally: true,
-                                          fitInsideVertically: true,
-                                          getTooltipItem:
-                                              (
-                                                group,
-                                                groupIndex,
-                                                rod,
-                                                rodIndex,
-                                              ) {
-                                                return BarTooltipItem(
-                                                  rod.toY.toStringAsFixed(1),
-                                                  const TextStyle(
-                                                    color: Colors.white,
-                                                    fontSize: 12,
-                                                  ),
-                                                );
-                                              },
-                                        ),
-                                      ),
+                                      },
                                     ),
-                                  );
-                                },
-                              ),
-                            ),
-                            const SizedBox(height: 32),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'L/100km',
-                                  style: TextStyle(
-                                    color: !showKmPerLiter
-                                        ? Colors.black
-                                        : Colors.black38,
-                                    fontWeight: FontWeight.w500,
                                   ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                  ),
-                                  child: GestureDetector(
-                                    onTap: () async {
-                                      setState(() {
-                                        showKmPerLiter = !showKmPerLiter;
-                                      });
-                                      final prefs =
-                                          await SharedPreferences.getInstance();
-                                      await prefs.setBool(
-                                        'showKmPerLiter',
-                                        showKmPerLiter,
-                                      );
-                                    },
-                                    child: AnimatedContainer(
-                                      duration: const Duration(
-                                        milliseconds: 260,
-                                      ),
-                                      curve: Curves.bounceOut,
-                                      width: 38,
-                                      height: 22,
-                                      decoration: BoxDecoration(
-                                        color: Colors.white,
-                                        borderRadius: BorderRadius.circular(12),
-                                        border: Border.all(
-                                          color: Colors.black12,
-                                          width: 1,
+                                  const SizedBox(height: 32),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'L/100km',
+                                        style: TextStyle(
+                                          color: !showKmPerLiter
+                                              ? Colors.black
+                                              : Colors.black38,
+                                          fontWeight: FontWeight.w500,
                                         ),
                                       ),
-                                      child: Stack(
-                                        children: [
-                                          AnimatedPositioned(
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                        ),
+                                        child: GestureDetector(
+                                          onTap: () async {
+                                            setState(() {
+                                              showKmPerLiter = !showKmPerLiter;
+                                            });
+                                            final prefs =
+                                                await SharedPreferences.getInstance();
+                                            await prefs.setBool(
+                                              'showKmPerLiter',
+                                              showKmPerLiter,
+                                            );
+                                          },
+                                          child: AnimatedContainer(
                                             duration: const Duration(
                                               milliseconds: 260,
                                             ),
                                             curve: Curves.bounceOut,
-                                            left: showKmPerLiter ? 18 : 2,
-                                            top: 2,
-                                            child: Padding(
-                                              padding: const EdgeInsets.only(
-                                                bottom: 2,
-                                              ),
-                                              child: Container(
-                                                width: 16,
-                                                height: 16,
-                                                decoration: BoxDecoration(
-                                                  color: Colors.black,
-                                                  borderRadius:
-                                                      BorderRadius.circular(9),
-                                                ),
+                                            width: 38,
+                                            height: 22,
+                                            decoration: BoxDecoration(
+                                              color: Colors.white,
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                              border: Border.all(
+                                                color: Colors.black12,
+                                                width: 1,
                                               ),
                                             ),
+                                            child: Stack(
+                                              children: [
+                                                AnimatedPositioned(
+                                                  duration: const Duration(
+                                                    milliseconds: 260,
+                                                  ),
+                                                  curve: Curves.bounceOut,
+                                                  left: showKmPerLiter ? 18 : 2,
+                                                  top: 2,
+                                                  child: Padding(
+                                                    padding:
+                                                        const EdgeInsets.only(
+                                                          bottom: 2,
+                                                        ),
+                                                    child: Container(
+                                                      width: 16,
+                                                      height: 16,
+                                                      decoration: BoxDecoration(
+                                                        color: Colors.black,
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                              9,
+                                                            ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
                                           ),
-                                        ],
+                                        ),
                                       ),
-                                    ),
+                                      Text(
+                                        'km/L',
+                                        style: TextStyle(
+                                          color: showKmPerLiter
+                                              ? Colors.black
+                                              : Colors.black38,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                ),
-                                Text(
-                                  'km/L',
-                                  style: TextStyle(
-                                    color: showKmPerLiter
-                                        ? Colors.black
-                                        : Colors.black38,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                      // ...existing code...
-                    ],
-                  ),
-                );
-              }
-              if (index == refills.length + 1 && _hasMore) {
-                // Loading indicator at the end
-                return const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 24),
-                  child: Center(child: CircularProgressIndicator()),
-                );
-              }
-              if (index > 0 && index <= refills.length) {
-                // Always use sorted refills for calculations
-                refills.sort(
-                  (a, b) => b.odometer.compareTo(a.odometer),
-                ); // Newest to oldest
-                final refill = refills[index - 1];
-                final nextRefill = (index < refills.length)
-                    ? refills[index]
-                    : null;
-                return Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 0,
-                  ),
-                  child: Dismissible(
-                    key: Key(refill.id),
-                    direction: DismissDirection.endToStart,
-                    background: Container(
-                      alignment: Alignment.centerRight,
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
-                      color: Colors.transparent,
-                      child: const Icon(
-                        Icons.delete_outline,
-                        color: Colors.black38,
-                        size: 28,
-                      ),
-                    ),
-                    confirmDismiss: (direction) async {
-                      final confirm = await showDialog<bool>(
-                        context: context,
-                        builder: (context) => AlertDialog(
-                          title: const Text('Delete Refill'),
-                          content: const Text(
-                            'Are you sure you want to delete this refill?',
-                          ),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.of(context).pop(false),
-                              child: const Text('Cancel'),
-                            ),
-                            TextButton(
-                              onPressed: () => Navigator.of(context).pop(true),
-                              child: const Text(
-                                'Delete',
-                                style: TextStyle(color: Colors.red),
+                                ],
                               ),
                             ),
+                            // ...existing code...
                           ],
                         ),
                       );
-                      if (confirm == true) {
-                        await RefillDatabase.instance.deleteRefill(refill.id);
-                        setState(() {
-                          refills.remove(refill);
-                          refills.sort(
-                            (a, b) => b.odometer.compareTo(a.odometer),
-                          ); // Newest to oldest
-                        });
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Refill deleted')),
-                        );
-                        return true;
-                      }
-                      return false;
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.only(bottom: 14),
-                      child: SizedBox(
-                        width: double.infinity,
-                        child: RefillCard(
-                          refill: refill,
-                          previousRefill:
-                              nextRefill, // Use next refill instead of previous
+                    }
+                    if (index == refills.length + 1 && _hasMore) {
+                      // Loading indicator at the end
+                      return const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 24),
+                        child: Center(child: CircularProgressIndicator()),
+                      );
+                    }
+                    if (index > 0 && index <= refills.length) {
+                      // Always use sorted refills for calculations
+                      refills.sort(
+                        (a, b) => b.odometer.compareTo(a.odometer),
+                      ); // Newest to oldest
+                      final refill = refills[index - 1];
+                      final nextRefill = (index < refills.length)
+                          ? refills[index]
+                          : null;
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 0,
                         ),
-                      ),
-                    ),
-                  ),
-                );
-              }
-              return const SizedBox.shrink();
-            },
-          ),
-        ),
-      ),
+                        child: Dismissible(
+                          key: Key(refill.id),
+                          direction: DismissDirection.endToStart,
+                          background: Container(
+                            alignment: Alignment.centerRight,
+                            padding: const EdgeInsets.symmetric(horizontal: 24),
+                            color: Colors.transparent,
+                            child: const Icon(
+                              Icons.delete_outline,
+                              color: Colors.black38,
+                              size: 28,
+                            ),
+                          ),
+                          confirmDismiss: (direction) async {
+                            final confirm = await showDialog<bool>(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                title: const Text('Delete Refill'),
+                                content: const Text(
+                                  'Are you sure you want to delete this refill?',
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () =>
+                                        Navigator.of(context).pop(false),
+                                    child: const Text('Cancel'),
+                                  ),
+                                  TextButton(
+                                    onPressed: () =>
+                                        Navigator.of(context).pop(true),
+                                    child: const Text(
+                                      'Delete',
+                                      style: TextStyle(color: Colors.red),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                            if (confirm == true) {
+                              await RefillDatabase.instance.deleteRefill(
+                                refill.id,
+                              );
+                              setState(() {
+                                refills.remove(refill);
+                                refills.sort(
+                                  (a, b) => b.odometer.compareTo(a.odometer),
+                                ); // Newest to oldest
+                              });
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Refill deleted')),
+                              );
+                              return true;
+                            }
+                            return false;
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.only(bottom: 14),
+                            child: SizedBox(
+                              width: double.infinity,
+                              child: RefillCard(
+                                refill: refill,
+                                previousRefill:
+                                    nextRefill, // Use next refill instead of previous
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    }
+                    return const SizedBox.shrink();
+                  },
+                ),
+              ),
+            ),
     );
   }
 
