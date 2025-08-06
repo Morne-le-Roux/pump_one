@@ -161,6 +161,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 : 0, // +1 for graph, +1 for loading
             itemBuilder: (context, index) {
               if (index == 0) {
+                // Only show graph if there are 2 or more refills
+                if (refills.length < 2) {
+                  return const SizedBox.shrink();
+                }
                 // Graph at the top with switch below, inside a card-like container
                 return Padding(
                   padding: const EdgeInsets.symmetric(
@@ -196,7 +200,6 @@ class _HomeScreenState extends State<HomeScreen> {
                               child: Builder(
                                 builder: (context) {
                                   final spots = getChartSpots();
-                                  // final ticks = getYAxisTicks(spots);
                                   return BarChart(
                                     BarChartData(
                                       gridData: FlGridData(
@@ -208,28 +211,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                           sideTitles: SideTitles(
                                             showTitles: true,
                                             reservedSize: 38,
-                                            // getTitlesWidget: (value, meta) {
-                                            //   if (ticks.contains(value)) {
-                                            //     return Padding(
-                                            //       padding:
-                                            //           const EdgeInsets.only(
-                                            //             right: 8,
-                                            //           ),
-                                            //       child: Text(
-                                            //         value.toStringAsFixed(1),
-                                            //         style: const TextStyle(
-                                            //           color: Colors.black54,
-                                            //           fontSize: 11,
-                                            //         ),
-                                            //         textAlign: TextAlign.right,
-                                            //       ),
-                                            //     );
-                                            //   }
-                                            //   return const SizedBox.shrink();
-                                            // },
-                                            // interval: ticks.length > 1
-                                            //     ? (ticks[1])
-                                            //     : 1,
                                           ),
                                         ),
                                         bottomTitles: AxisTitles(
